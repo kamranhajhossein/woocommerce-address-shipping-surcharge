@@ -65,7 +65,17 @@ Debug logging is disabled by default. When enabled, the plugin logs the matched 
 - The current release supports WooCommerce Classic Cart and Checkout.
 - WooCommerce Checkout Blocks are not supported yet.
 
+## Uninstall
+
+Removing the plugin deletes its current settings and any settings migrated from releases before 1.0.2.
+
 ## Changelog
+
+### 1.0.2
+
+- Removed project-specific class names and default delivery areas
+- Added backward-compatible settings migration
+- Added WordPress.org metadata, uninstall handling, and automated checks
 
 ### 1.0.1
 

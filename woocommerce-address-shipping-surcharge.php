@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Address Shipping Surcharge
  * Description: Automatically apply shipping surcharges based on customer address keywords, cities, and delivery zones in WooCommerce.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Kamran Hajhossein
  * Author URI: https://webrabin.com
  * Text Domain: woocommerce-address-shipping-surcharge
@@ -14,17 +14,28 @@
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-final class Domino_Address_Delivery_Fee {
-    const OPT = 'dadf_settings';
+final class WASS_Address_Shipping_Surcharge {
+    const OPT = 'wass_settings';
+    const LEGACY_OPT = 'dadf_settings';
     const LOG_SOURCE = 'woocommerce-address-shipping-surcharge';
-    const SESSION_LABEL = 'dadf_current_fee_label';
+    const SESSION_LABEL = 'wass_current_fee_label';
 
     public function __construct() {
+        $this->maybe_migrate_legacy_settings();
         add_action( 'admin_menu', [ $this, 'menu' ] );
         add_action( 'admin_init', [ $this, 'register' ] );
         add_action( 'woocommerce_checkout_update_order_review', [ $this, 'capture_checkout' ], 1 );
         add_action( 'woocommerce_cart_calculate_fees', [ $this, 'apply_fee' ], 9999 );
         add_action( 'wp_footer', [ $this, 'checkout_js' ], 99 );
+    }
+
+    private function maybe_migrate_legacy_settings() {
+        if ( false === get_option( self::OPT, false ) ) {
+            $legacy = get_option( self::LEGACY_OPT, false );
+            if ( is_array( $legacy ) ) {
+                add_option( self::OPT, $legacy );
+            }
+        }
     }
 
     private function defaults() {
@@ -33,7 +44,7 @@ final class Domino_Address_Delivery_Fee {
             'debug'         => 'no',
             'display_mode'  => 'custom',
             'label_template'=> 'افزایش هزینه ارسال به محدوده {zone}',
-            'rules'         => "چیتگر|80000\nشهرک چیتگر|80000\nکوهک|80000\nمنطقه 22|80000\nمنطقه ۲۲|80000\nپاکدشت|150000\nپردیس|150000\nپرند|200000",
+            'rules'         => "منطقه نمونه|50000\nشهر نمونه|75000",
         ];
     }
 
@@ -161,7 +172,7 @@ final class Domino_Address_Delivery_Fee {
             if ( ! empty( $data[$k] ) ) $parts[] = wc_clean( $data[$k] );
         }
         $text = $this->norm( implode( ' ', $parts ) );
-        WC()->session->set( 'dadf_address_text', $text );
+        WC()->session->set( 'wass_address_text', $text );
         $this->logger( 'CHECKOUT_CAPTURE', [ 'address_source' => $ship ? 'shipping' : 'billing' ] );
     }
 
@@ -207,7 +218,7 @@ final class Domino_Address_Delivery_Fee {
 
         $text = '';
         if ( function_exists( 'WC' ) && WC()->session ) {
-            $text = (string) WC()->session->get( 'dadf_address_text', '' );
+            $text = (string) WC()->session->get( 'wass_address_text', '' );
         }
 
         if ( $text === '' && function_exists( 'WC' ) && WC()->customer ) {
@@ -265,4 +276,4 @@ final class Domino_Address_Delivery_Fee {
         <?php
     }
 }
-new Domino_Address_Delivery_Fee();
+new WASS_Address_Shipping_Surcharge();
